@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar Planner - My Website</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: #333;
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .return-btn, .storage-btn, .view-plans-btn {
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .return-btn:hover, .storage-btn:hover, .view-plans-btn:hover {
+            background: #0056b3;
+        }
+
+        .storage-btn.save {
+            background: #28a745;
+        }
+
+        .storage-btn.save:hover {
+            background: #1e7e34;
+        }
+
+        .view-plans-btn {
+            background: #6f42c1;
+        }
+
+        .view-plans-btn:hover {
+            background: #5a32a3;
+        }
+
+        #loadFile {
+            display: none;
+        }
+
+        /* Main Content */
+        .calendar-container {
+            padding-top: 100px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-left: 2rem;
+            padding-right: 2rem;
+            padding-bottom: 2rem;
+        }
+
+        .calendar-header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .nav-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .nav-btn:hover {
+            background: #0056b3;
+        }
+
+        .current-month {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .current-year {
+            font-size: 1.2rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .calendar-main {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+
+        .day-header {
+            background: #f8f9fa;
+            padding: 1rem;
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .day-cell {
+            min-height: 100px;
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            position: relative;
+        }
+
+        .day-cell:hover {
+            background: #f8f9fa;
+        }
+
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .other-month {
+            color: #ccc;
+            background: #f9f9f9;
+        }
+
+        .today {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+        }
+
+        .has-plans {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+
+        .day-plans {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .plan-item {
+            background: #007bff;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-bottom: 2px;
+            font-size: 0.7rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .plan-item:hover {
+            background: #0056b3;
+        }
+
+        .plan-content {
+            flex-grow: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .delete-plan-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            cursor: pointer;
+            margin-left: 4px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .plan-item:hover .delete-plan-btn {
+            opacity: 1;
+        }
+
+        .delete-plan-btn:hover {
+            background: #c82333;
+        }
+
+        .add-plan-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .day-cell:hover .add-plan-btn {
+            opacity: 1;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .status-message {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            padding: 1rem;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            z-index: 3000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .status-message.success {
+            background: #28a745;
+        }
+
+        .status-message.error {
+            background: #dc3545;
+        }
+
+        .status-message.show {
+            opacity: 1;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .calendar-container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            .current-month {
+                font-size: 1.5rem;
+            }
+            
+            .day-cell {
+                min-height: 80px;
+                padding: 4px;
+            }
+            
+            .modal-content {
+                margin: 5% auto;
+                padding: 1rem;
+            }
+
+            .nav-actions {
+                gap: 0.5rem;
+            }
+
+            .storage-btn, .view-plans-btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Status Message -->
+    <div id="statusMessage" class="status-message"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">Calendario de Planes</div>
+            <div class="nav-actions">
+                <button class="view-plans-btn" onclick="viewPlans()">📋 Ver Plannings</button>
+                <button class="storage-btn save" onclick="savePlans()">💾 Guardar Planning</button>
+                <button class="storage-btn" onclick="document.getElementById('loadFile').click()">📁 Cargar Planning</button>
+                <input type="file" id="loadFile" accept=".json" onchange="loadPlans(event)">
+                <a href="index.html" class="return-btn">← Return to Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Calendar Container -->
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <div class="calendar-nav">
+                <button class="nav-btn" onclick="previousMonth()">← Previous</button>
+                <div>
+                    <div class="current-month" id="currentMonth"></div>
+                    <div class="current-year" id="currentYear"></div>
+                </div>
+                <button class="nav-btn" onclick="nextMonth()">Next →</button>
+            </div>
+        </div>
+        
+        <div class="calendar-main">
+            <div class="calendar-grid" id="calendarGrid">
+                <!-- Calendar will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for adding plans -->
+    <div id="planModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Añadir Plan</h2>
+            <form id="planForm">
+                <div class="form-group">
+                    <label for="planTitle">Título del Plan *</label>
+                    <input type="text" id="planTitle" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="planTime">Time</label>
+                    <input type="time" id="planTime">
+                </div>
+                
+                <div class="form-group">
+                    <label for="planCategory">Category</label>
+                    <select id="planCategory">
+                        <option value="personal">Personal</option>
+                        <option value="work">Work</option>
+                        <option value="meeting">Meeting</option>
+                        <option value="appointment">Appointment</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="planDescription">Descripción</label>
+                    <textarea id="planDescription" placeholder="Add details about your plan..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn-primary">Guardar Plan</button>
+                <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal for deleting plans -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeDeleteModal()">&times;</span>
+            <h2>Borrar Plan</h2>
+            <p>Estás seguro de borrar este plan?</p>
+            <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 5px;">
+                <strong id="deletePlanTitle"></strong><br>
+                <span id="deletePlanTime" style="color: #666;"></span>
+            </div>
+            <div style="margin-top: 2rem;">
+                <button type="button" class="btn-primary" style="background: #dc3545;" onclick="confirmDeletePlan()">Delete Plan</button>
+                <button type="button" class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Calendar data and state
+        let currentDate = new Date();
+        let currentMonth = currentDate.getMonth();
+        let currentYear = currentDate.getFullYear();
+        let selectedDate = null;
+        let planToDelete = null; // For delete confirmation
+        
+        // Plans storage
+        let plans = {};
+
+        const months = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        // View plans function - redirects to another page
+        function viewPlans() {
+            // You can change 'plans-view.html' to whatever page you want to redirect to
+            window.location.href = 'https://drive.google.com/drive/folders/1GwPTr8xFDNIEhR6umgLW3jJPARuvPvxg?usp=sharing';
+        }
+
+        // Storage functions
+        function savePlans() {
+            try {
+                const dataStr = JSON.stringify({
+                    plans: plans,
+                    exportDate: new Date().toISOString(),
+                    version: "1.0"
+                }, null, 2);
+                
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `calendar-plans-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                URL.revokeObjectURL(url);
+                showStatus('Plans saved successfully!', 'success');
+            } catch (error) {
+                showStatus('Error saving plans: ' + error.message, 'error');
+            }
+        }
+
+        function loadPlans(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // Validate the data structure
+                    if (data.plans && typeof data.plans === 'object') {
+                        plans = data.plans;
+                        generateCalendar();
+                        showStatus('Plans loaded successfully!', 'success');
+                    } else {
+                        throw new Error('Invalid file format');
+                    }
+                } catch (error) {
+                    showStatus('Error loading plans: ' + error.message, 'error');
+                }
+            };
+            
+            reader.onerror = function() {
+                showStatus('Error reading file', 'error');
+            };
+            
+            reader.readAsText(file);
+            
+            // Reset file input
+            event.target.value = '';
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${type} show`;
+            
+            setTimeout(() => {
+                statusDiv.classList.remove('show');
+            }, 3000);
+        }
+
+        // Auto-save function (saves automatically when plans are added)
+        function autoSave() {
+            // This could be expanded to save to localStorage if available
+            // For now, we'll just trigger a save reminder
+            console.log('Plans updated - consider saving your changes');
+        }
+
+        // Initialize calendar
+        function initCalendar() {
+            updateCalendarHeader();
+            generateCalendar();
+        }
+
+        function updateCalendarHeader() {
+            document.getElementById('currentMonth').textContent = months[currentMonth];
+            document.getElementById('currentYear').textContent = currentYear;
+        }
+
+        function generateCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            // Add day headers
+            dayNames.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'day-header';
+                dayHeader.textContent = day;
+                grid.appendChild(dayHeader);
+            });
+
+            // Get first day of month and number of days
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+            // Add previous month's trailing days
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const dayCell = createDayCell(daysInPrevMonth - i, true);
+                grid.appendChild(dayCell);
+            }
+
+            // Add current month's days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayCell = createDayCell(day, false);
+                grid.appendChild(dayCell);
+            }
+
+            // Add next month's leading days
+            const totalCells = grid.children.length - 7; // Subtract headers
+            const remainingCells = 42 - totalCells; // 6 rows × 7 days
+            for (let day = 1; day <= remainingCells; day++) {
+                const dayCell = createDayCell(day, true);
+                grid.appendChild(dayCell);
+            }
+        }
+
+        function createDayCell(day, isOtherMonth) {
+            const dayCell = document.createElement('div');
+            dayCell.className = 'day-cell';
+            
+            if (isOtherMonth) {
+                dayCell.classList.add('other-month');
+            }
+
+            // Check if it's today
+            const today = new Date();
+            if (!isOtherMonth && 
+                day === today.getDate() && 
+                currentMonth === today.getMonth() && 
+                currentYear === today.getFullYear()) {
+                dayCell.classList.add('today');
+            }
+
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = day;
+            dayCell.appendChild(dayNumber);
+
+            // Add plans if any
+            const dateKey = `${currentYear}-${currentMonth}-${day}`;
+            if (plans[dateKey] && plans[dateKey].length > 0) {
+                dayCell.classList.add('has-plans');
+                const dayPlans = document.createElement('div');
+                dayPlans.className = 'day-plans';
+                
+                plans[dateKey].forEach(plan => {
+                    const planItem = document.createElement('div');
+                    planItem.className = 'plan-item';
+                    planItem.title = `${plan.title} ${plan.time ? '- ' + plan.time : ''}`;
+                    
+                    const planContent = document.createElement('span');
+                    planContent.className = 'plan-content';
+                    planContent.textContent = plan.title;
+                    planItem.appendChild(planContent);
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-plan-btn';
+                    deleteBtn.innerHTML = '×';
+                    deleteBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        openDeleteModal(dateKey, plan);
+                    };
+                    planItem.appendChild(deleteBtn);
+                    
+                    dayPlans.appendChild(planItem);
+                });
+                
+                dayCell.appendChild(dayPlans);
+            }
+
+            // Add button to add plans (only for current month)
+            if (!isOtherMonth) {
+                const addBtn = document.createElement('button');
+                addBtn.className = 'add-plan-btn';
+                addBtn.innerHTML = '+';
+                addBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    openModal(day);
+                };
+                dayCell.appendChild(addBtn);
+            }
+
+            return dayCell;
+        }
+
+        function openModal(day) {
+            selectedDate = day;
+            document.getElementById('planModal').style.display = 'block';
+            document.getElementById('planForm').reset();
+        }
+
+        function closeModal() {
+            document.getElementById('planModal').style.display = 'none';
+            selectedDate = null;
+        }
+
+        // Delete plan functions
+        function openDeleteModal(dateKey, plan) {
+            planToDelete = { dateKey, plan };
+            document.getElementById('deletePlanTitle').textContent = plan.title;
+            document.getElementById('deletePlanTime').textContent = plan.time ? 
+                `Time: ${plan.time}` : 'No specific time';
+            document.getElementById('deleteModal').style.display = 'block';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+            planToDelete = null;
+        }
+
+        function confirmDeletePlan() {
+            if (!planToDelete) return;
+            
+            const { dateKey, plan } = planToDelete;
+            
+            // Find and remove the plan
+            if (plans[dateKey]) {
+                plans[dateKey] = plans[dateKey].filter(p => p.id !== plan.id);
+                
+                // If no more plans for this date, remove the date entry
+                if (plans[dateKey].length === 0) {
+                    delete plans[dateKey];
+                }
+            }
+            
+            closeDeleteModal();
+            generateCalendar();
+            autoSave();
+            showStatus('Plan deleted successfully!', 'success');
+        }
+
+        function previousMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            updateCalendarHeader();
+            generateCalendar();
+        }
+
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            updateCalendarHeader();
+            generateCalendar();
+        }
+
+        // Handle form submission
+        document.getElementById('planForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('planTitle').value;
+            const time = document.getElementById('planTime').value;
+            const category = document.getElementById('planCategory').value;
+            const description = document.getElementById('planDescription').value;
+            
+            const dateKey = `${currentYear}-${currentMonth}-${selectedDate}`;
+            
+            if (!plans[dateKey]) {
+                plans[dateKey] = [];
+            }
+            
+            plans[dateKey].push({
+                title: title,
+                time: time,
+                category: category,
+                description: description,
+                id: Date.now() // Simple ID generation
+            });
+            
+            closeModal();
+            generateCalendar();
+            autoSave(); // Trigger auto-save logic
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const planModal = document.getElementById('planModal');
+            const deleteModal = document.getElementById('deleteModal');
+            
+            if (event.target === planModal) {
+                closeModal();
+            } else if (event.target === deleteModal) {
+                closeDeleteModal();
+            }
+        };
+
+        // Initialize the calendar when page loads
+        initCalendar();
+    </script>
+</body>
+</html>
